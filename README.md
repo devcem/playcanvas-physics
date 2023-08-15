@@ -14,6 +14,14 @@ You can define your object type with simple tags, supported tags:
 
 Objects that doesn't have any of these tags above will be static if they have collision component.
 
+## Events
+You can listen events like these:
+
+- this.entity.on('Trigger');
+- this.entity.on('Collision')
+
+Trigger is on triggered object, collision is on dynamic object, it gives which object we collided.
+
 ## What you can do?
 - Simple games including mobile
 - 2kb super simple engine, loads instantly
