@@ -9,16 +9,16 @@ Simple physics for casual games, it's 2D. It only supports sphere + sphere and s
 
 ## Object Types
 You can define your object type with simple tags, supported tags:
-- Dynamic
-- Ghost
+- `Dynamic`
+- `Ghost`
 
 Objects that doesn't have any of these tags above will be static if they have collision component.
 
 ## Events
 You can listen events like these:
 
-- this.entity.on('Trigger');
-- this.entity.on('Collision')
+- `this.entity.on('Trigger')`
+- `this.entity.on('Collision')`
 
 Trigger is on triggered object, collision is on dynamic object, it gives which object we collided.
 
