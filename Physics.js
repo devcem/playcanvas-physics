@@ -3,6 +3,7 @@ var Physics = pc.createScript('physics');
 Physics.attributes.add('threshold', { type : 'number', default : 1.1 });
 Physics.prototype.initialize = function() {
     this.kinematicCollisions = [];
+    this.recentlyCollided = [];
 };
 
 Physics.prototype.updateKinematic = function() {
@@ -23,6 +24,10 @@ Physics.prototype.updateKinematic = function() {
             if(!object.entity._translate){
                 object.entity.revertTranslate = function(collision){
                     var position  = this.getPosition();
+                    if(!position){
+                        return false;
+                    }
+
                     var collisionPosition = collision.getPosition();
 
                     var direction = self.lookAt(
@@ -46,6 +51,8 @@ Physics.prototype.updateKinematic = function() {
                 };
 
                 object.entity._translate = object.entity.translate;
+                object.entity.previousPosition = object.entity.getPosition().clone();
+
                 object.entity.translate = function(x, y, z){
                     this.previousPosition = this.getPosition().clone();
 
@@ -68,12 +75,16 @@ Physics.prototype.checkCollisions = function(dt) {
         var objects = Object.values(pc.app.systems.collision.store);
         var i = objects.length;
 
+        this.triggerPool = [];
+
         while(i--){
             var object = objects[i];
 
             if(
                 object && 
                 object.entity.parent &&
+                object.entity.enabled &&
+                object.entity.collision.enabled &&
                 object.entity.tags.list().indexOf('Dynamic') === -1
             ){
                 if(object.data.type == 'sphere'){
@@ -89,6 +100,48 @@ Physics.prototype.checkCollisions = function(dt) {
                 }
             }
         }
+
+        //this.triggerPool trigger closest one with while i
+        this.triggerPool.sort(function(a, b){
+            return a.distance - b.distance;
+        });
+
+        //console.log(this.triggerPool);
+
+        if(this.triggerPool.length > 0){
+            for(var j = 0; j < this.triggerPool.length; j++){
+                var object = this.triggerPool[j];
+                var entity = this.triggerPool[j].object.entity;
+
+                entity.fire('Trigger', kinematicObject, dt);
+
+                var isExist = this.recentlyCollided.find(function(entity){
+                    return entity.object == object.object;
+                });
+
+                if(!isExist){
+                    this.recentlyCollided.push(object);
+                }
+            }   
+        }
+
+        //check this.recentlyCollided and if they dont exist in triggerPool, trigger Leave
+        var recentlyCollidedIndex = this.recentlyCollided.length;
+
+        while(recentlyCollidedIndex--){
+            var recentlyCollidedObject = this.recentlyCollided[recentlyCollidedIndex];
+
+            var isExist = this.triggerPool.find(function(entity){
+                return entity.object == recentlyCollidedObject.object;
+            });
+
+            if(!isExist){
+                recentlyCollidedObject.object.entity.fire('Leave', kinematicObject, dt);
+
+                this.recentlyCollided.splice(recentlyCollidedIndex, 1);
+            }
+
+        }
     }
 };
 
@@ -99,7 +152,12 @@ Physics.prototype.calculateSphereCollision = function(kinematicObject, object) {
 
     if(distance < kinematicObject.collision.radius + radius){
         //trigger both parties
-        object.entity.fire('Trigger', kinematicObject);
+        this.triggerPool.push({
+            distance : distance,
+            object : object
+        });
+
+        //object.entity.fire('Trigger', kinematicObject);
         kinematicObject.fire('Collision', object.entity);
 
         if(!isGhost){
@@ -109,6 +167,7 @@ Physics.prototype.calculateSphereCollision = function(kinematicObject, object) {
 };
 
 Physics.prototype.calculateBoxCollision = function(kinematicObject, object) {
+    var distance = kinematicObject.getPosition().sub(object.entity.getPosition()).length();
     var kinematicObjectPosition = kinematicObject.getPosition();
     var kinematicRadius = kinematicObject.collision.radius;
     var position = object.entity.getPosition();
@@ -124,7 +183,12 @@ Physics.prototype.calculateBoxCollision = function(kinematicObject, object) {
         kinematicObjectPosition.z < position.z + halfExtents.z + kinematicRadius
     ){
         //trigger both parties
-        object.entity.fire('Trigger', kinematicObject);
+        this.triggerPool.push({
+            distance : distance,
+            object : object
+        });
+        
+        //object.entity.fire('Trigger', kinematicObject);
         kinematicObject.fire('Collision', object.entity);
 
         if(!isGhost){
