@@ -17,7 +17,8 @@ Objects that doesn't have any of these tags above will be static if they have co
 ## Events
 You can listen events like these:
 
-- `this.entity.on('Trigger')`
+- `this.entity.on('Trigger', object, dt)`
+- `this.entity.on('Leave')`
 - `this.entity.on('Collision')`
 
 Trigger is on triggered object, collision is on dynamic object, it gives which object we collided.
