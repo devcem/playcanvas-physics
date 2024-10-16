@@ -32,7 +32,7 @@ Trigger is on triggered object, collision is on dynamic object, it gives which o
 https://www.youtube.com/watch?v=0oDCl_D34X8&ab_channel=CemDemir
 
 ## Demo
-https://playcanv.as/b/2c3f7dd2
+[https://playcanv.as/b/2c3f7dd2](https://playcanv.as/b/4b1e2489)
 
 ## Sample Project
 https://playcanvas.com/project/1127019/overview/simple-physics-box--sphere
